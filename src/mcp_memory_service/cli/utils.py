@@ -25,6 +25,12 @@ from ..storage.base import MemoryStorage
 logger = logging.getLogger(__name__)
 
 
+def _wrap_tag_aliases(storage: MemoryStorage) -> MemoryStorage:
+    """Apply the same tag alias layer the servers use (idempotent)."""
+    from ..storage.alias_wrapper import wrap_with_tag_aliases
+    return wrap_with_tag_aliases(storage)
+
+
 async def get_storage(backend: Optional[str] = None, strict_dimension_check: bool = True) -> MemoryStorage:
     """
     Get storage backend for CLI operations.
@@ -53,7 +59,7 @@ async def get_storage(backend: Optional[str] = None, strict_dimension_check: boo
             embedding_model=EMBEDDING_MODEL_NAME,
         )
         await storage.initialize(strict_dimension_check=strict_dimension_check)
-        return storage
+        return _wrap_tag_aliases(storage)
     elif backend == 'cloudflare':
         from ..storage.cloudflare import CloudflareStorage
         from ..config import (
@@ -75,9 +81,9 @@ async def get_storage(backend: Optional[str] = None, strict_dimension_check: boo
             base_delay=CLOUDFLARE_BASE_DELAY
         )
         await storage.initialize()
-        return storage
+        return _wrap_tag_aliases(storage)
     elif backend == 'hybrid':
-        return await _build_hybrid_storage()
+        return _wrap_tag_aliases(await _build_hybrid_storage())
     elif backend == 'milvus':
         from ..storage.milvus import MilvusMemoryStorage
         from ..config import (
@@ -90,7 +96,7 @@ async def get_storage(backend: Optional[str] = None, strict_dimension_check: boo
             embedding_model=EMBEDDING_MODEL_NAME,
         )
         await storage.initialize()
-        return storage
+        return _wrap_tag_aliases(storage)
     else:
         raise ValueError(f"Unsupported storage backend: {backend}")
 

@@ -193,4 +193,9 @@ async def create_storage_instance(sqlite_path: str, server_type: str = None) -> 
     await storage.initialize()
     logger.info("Storage backend %s initialized successfully", _sanitize_log_value(StorageClass.__name__))
 
+    # Apply the backend-independent tag alias layer (canonical tag mappings
+    # live in BASE_DIR, not in any backend, so they survive backend switches).
+    from .alias_wrapper import wrap_with_tag_aliases
+    storage = wrap_with_tag_aliases(storage)
+
     return storage

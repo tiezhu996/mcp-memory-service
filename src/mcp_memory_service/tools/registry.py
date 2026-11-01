@@ -646,6 +646,82 @@ Examples:
         annotations={"destructiveHint": True},
     ),
     ToolDef(
+        name="tag_alias_list",
+        description="""List registered tag aliases (variant spellings grouped under a canonical tag).
+
+                    Returns every group as {canonical, aliases[], created_at, updated_at}.
+                    The mapping is stored server-side in a backend-independent file,
+                    so it applies across restarts and storage-backend switches.""",
+        input_schema={
+            "type": "object",
+            "properties": {},
+        },
+        annotations={"readOnlyHint": True, "destructiveHint": False},
+    ),
+    ToolDef(
+        name="tag_alias_register",
+        description="""Register tag variant spellings under one canonical (primary) tag.
+
+                    After registration:
+                    - new memories written with any variant are stored under the canonical tag;
+                    - old memories that keep a variant spelling are still found when
+                      searching/filtering/counting by the canonical tag or by any variant;
+                    - tag listings and usage counts merge the variants onto the canonical tag.
+
+                    Names are trimmed and lowercased like ordinary tags. Registering an
+                    existing canonical tag as a variant merges both groups. A variant
+                    already claimed by another canonical tag is rejected — undo that
+                    registration first with tag_alias_remove.
+
+                    Example:
+                    {"canonical": "atlas",
+                     "aliases": ["proj:atlas", "atlasproj", "project-atlas"]}""",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "canonical": {
+                    "type": "string",
+                    "description": "The single primary tag every variant maps to.",
+                },
+                "aliases": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "One or more variant spellings to map to the canonical tag.",
+                },
+            },
+            "required": ["canonical", "aliases"],
+        },
+        annotations={"destructiveHint": False},
+    ),
+    ToolDef(
+        name="tag_alias_remove",
+        description="""Undo a tag alias registration.
+
+                    Provide exactly one of:
+                    - "alias": remove just that variant (its group disappears when no variant remains);
+                    - "canonical": remove the whole group including all of its variants.
+
+                    Existing memories are never rewritten: removing a mapping only restores
+                    the pre-registration query/statistics behavior. Memories written while
+                    the mapping was active keep the canonical tag they were stored with.
+
+                    Example: {"canonical": "atlas"} or {"alias": "proj:atlas"}""",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "canonical": {
+                    "type": "string",
+                    "description": "Canonical tag whose whole registration should be removed.",
+                },
+                "alias": {
+                    "type": "string",
+                    "description": "Single variant spelling to remove from its group.",
+                },
+            },
+        },
+        annotations={"destructiveHint": False},
+    ),
+    ToolDef(
         name="memory_consolidate",
         description="""Memory consolidation management - run, monitor, and control memory optimization.
 

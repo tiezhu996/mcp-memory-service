@@ -77,9 +77,13 @@ class TestHybridBranchExists:
 
     @pytest.mark.asyncio
     async def test_hybrid_no_longer_raises(self, cfg, hybrid_cls):
-        """The regression itself: this used to raise ValueError."""
+        """The regression itself: this used to raise ValueError. The backend is
+        returned behind the tag-alias wrapper, which delegates initialize()."""
+        from mcp_memory_service.storage.alias_wrapper import AliasedStorage
+
         storage = await utils.get_storage("hybrid")
-        assert storage is hybrid_cls.return_value
+        assert isinstance(storage, AliasedStorage)
+        assert storage.inner_storage is hybrid_cls.return_value
         hybrid_cls.return_value.initialize.assert_awaited_once()
 
     @pytest.mark.asyncio

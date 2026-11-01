@@ -304,7 +304,9 @@ class MemoryServer:
 
             if storage is not None:
                 # Caller injected an already-initialized storage; adopt it
-                # directly and skip the deferred-init path entirely.
+                # directly and skip the deferred-init path entirely. Production
+                # injection (web MCP shim) comes from create_storage_instance,
+                # which is already wrapped with the tag alias layer.
                 self.storage = storage
                 self.memory_service = MemoryService(storage)
                 self._storage_initialized = True
@@ -521,6 +523,12 @@ class MemoryServer:
                 logger.error("❌ EAGER INIT: Unknown storage backend: %s", STORAGE_BACKEND)
                 raise ValueError(f"Unsupported storage backend: {STORAGE_BACKEND}")
 
+            # Apply the backend-independent tag alias layer before initialize:
+            # wrapper delegates initialize() and all later user-facing calls
+            # see canonical tags; delta-sync keeps using direct SQL internally.
+            from .storage.alias_wrapper import wrap_with_tag_aliases
+            self.storage = wrap_with_tag_aliases(self.storage)
+
             # Initialize the storage backend
             logger.info("🔧 EAGER INIT: Calling storage.initialize()...")
             await self.storage.initialize()
@@ -695,6 +703,10 @@ class MemoryServer:
                         "Use 'sqlite_vec', 'cloudflare', 'hybrid', or 'milvus'."
                     )
                 
+                # Apply the backend-independent tag alias layer (see eager init).
+                from .storage.alias_wrapper import wrap_with_tag_aliases
+                self.storage = wrap_with_tag_aliases(self.storage)
+
                 # Initialize the storage backend
                 logger.info("🔧 LAZY INIT: Calling storage.initialize()...")
                 await self.storage.initialize()

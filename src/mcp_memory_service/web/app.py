@@ -58,6 +58,7 @@ from .api.search import router as search_router
 from .api.events import router as events_router
 from .api.sync import router as sync_router
 from .api.manage import router as manage_router
+from .api.tag_aliases import router as tag_aliases_router
 from .api.analytics import router as analytics_router
 from .api.documents import router as documents_router
 from .api.mcp import router as mcp_router
@@ -385,6 +386,9 @@ def create_app() -> FastAPI:
     app.include_router(search_router, prefix="/api", tags=["search"])
     logger.info("✓ Included search router with %s routes", _sanitize_log_value(len(search_router.routes)))
     app.include_router(manage_router, prefix="/api/manage", tags=["management"])
+
+    # Canonical tag alias administration (backend-independent mapping file).
+    app.include_router(tag_aliases_router, prefix="/api", tags=["tags"])
     logger.info("✓ Included manage router with %s routes", _sanitize_log_value(len(manage_router.routes)))
     app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
     logger.info("✓ Included analytics router with %s routes", _sanitize_log_value(len(analytics_router.routes)))

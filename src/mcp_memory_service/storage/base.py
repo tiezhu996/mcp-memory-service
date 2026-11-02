@@ -1060,6 +1060,39 @@ class MemoryStorage(ABC):
         """
         return ["default"]
 
+    async def create_export_snapshot(
+        self,
+        store: Optional[str] = "default",
+        memory_type: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        tag_match: str = "any",
+        ttl_seconds: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Pin the current live set for a point-in-time, resumable export.
+
+        Backends that cannot freeze a read view raise ``NotImplementedError``;
+        the HTTP layer reports that as 501 rather than faking a stable export.
+        """
+        raise NotImplementedError("snapshot export is not supported by this storage backend")
+
+    async def get_export_snapshot_metadata(self, snapshot_id: str) -> Dict[str, Any]:
+        """Return metadata for a live export snapshot."""
+        raise NotImplementedError("snapshot export is not supported by this storage backend")
+
+    async def get_export_snapshot_page(
+        self,
+        snapshot_id: str,
+        after_id: int = 0,
+        limit: int = 1000,
+        include_embeddings: bool = False,
+    ) -> Dict[str, Any]:
+        """Return one keyset-paginated page of a pinned export snapshot."""
+        raise NotImplementedError("snapshot export is not supported by this storage backend")
+
+    async def release_export_snapshot(self, snapshot_id: str) -> bool:
+        """Release an export snapshot before its expiry; idempotent."""
+        raise NotImplementedError("snapshot export is not supported by this storage backend")
+
     async def count_all_memories(self, memory_type: Optional[str] = None, tags: Optional[List[str]] = None, tag_match: str = "any", stale_days: Optional[int] = None, store: Optional[str] = "default", agent_id: Optional[str] = None) -> int:
         """
         Get total count of memories in storage.

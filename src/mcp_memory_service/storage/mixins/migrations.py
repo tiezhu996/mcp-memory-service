@@ -417,6 +417,12 @@ class MigrationsMixin:
 
                 self._ensure_metadata_table()
 
+                # Point-in-time export snapshot tables (no-op when the backend
+                # composition does not include ExportSnapshotMixin).
+                ensure_export_tables = getattr(self, "_ensure_export_snapshot_tables", None)
+                if callable(ensure_export_tables):
+                    ensure_export_tables()
+
                 self.conn.execute('''
                     CREATE TABLE IF NOT EXISTS memories (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,

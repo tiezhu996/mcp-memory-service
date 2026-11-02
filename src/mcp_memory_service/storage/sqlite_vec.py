@@ -29,6 +29,7 @@ from .mixins import (
     HybridMixin,
     DeleteMixin,
     MetadataMixin,
+    ExportSnapshotMixin,
 )
 
 # Re-export module-level names for backward compatibility (tests patch these)
@@ -63,6 +64,7 @@ class SqliteVecMemoryStorage(
     HybridMixin,
     DeleteMixin,
     MetadataMixin,
+    ExportSnapshotMixin,
     MemoryStorage,
 ):
     """
@@ -80,6 +82,7 @@ class SqliteVecMemoryStorage(
     - HybridMixin: BM25 + vector hybrid search
     - DeleteMixin: soft-delete and purge operations
     - MetadataMixin: metadata updates, conflicts, versioning
+    - ExportSnapshotMixin: point-in-time, resumable export pagination
     """
 
     # RetrieveMixin.get_by_hash scopes the lookup to ``store`` (AND store = ?),
